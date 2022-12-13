@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/google/subcommands"
 	"github.com/tendermint/tendermint/config"
@@ -49,7 +50,8 @@ func (args *StartArgs) Execute(_ context.Context, flagSet *flag.FlagSet, _ ...in
 		log.NewSyncWriter(os.Stdout),
 	)
 
-	chainID := args.SeedConfig.ChainID    
+	waitTime := args.SeedConfig.Wait
+	chainID := args.SeedConfig.ChainID
 	nodeKeyFilePath := args.SeedConfig.NodeKeyFile
 	addrBookFilePath := args.SeedConfig.AddrBookFile
 
@@ -153,6 +155,13 @@ func (args *StartArgs) Execute(_ context.Context, flagSet *flag.FlagSet, _ ...in
 		panic(err)
 	}
 
-	sw.Wait()
+	time.Sleep(time.Duration(waitTime) * time.Second)
+	book.Save()
+
+	err = sw.Stop()
+	if err != nil {
+		panic(err)
+	}
+
 	return subcommands.ExitSuccess
 }
